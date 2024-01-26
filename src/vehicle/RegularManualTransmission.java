@@ -28,6 +28,15 @@ public class RegularManualTransmission implements ManualTransmission {
         for (int i = 0; i < 5; i++) {
             lowerGearLimits[i] = gearLimits[2 * i];
             upperGearLimits[i] = gearLimits[2 * i + 1];
+
+            // Validate gear speed ranges
+            if (lowerGearLimits[i] > upperGearLimits[i]) {
+                throw new IllegalArgumentException("Lower limit must be less than or equal to upper limit for each gear.");
+            }
+
+            if (i > 0 && lowerGearLimits[i] <= upperGearLimits[i - 1]) {
+                throw new IllegalArgumentException("Lower speed for each gear should be greater than upper speed of previous gear.");
+            }
         }
 
         // Initialize the transmission in first gear with zero speed
@@ -54,7 +63,9 @@ public class RegularManualTransmission implements ManualTransmission {
     @Override
     public ManualTransmission increaseSpeed() {
         int upperLimit = upperGearLimits[gear - 1];
-        if (speed < upperLimit) {
+        if (gear == 5 && speed >= upperLimit) {
+            status = "Cannot increase speed. Reached maximum speed.";
+        } else if (speed < upperLimit) {
             speed++;
             updateStatusForSpeedChange();
         } else {
@@ -63,11 +74,12 @@ public class RegularManualTransmission implements ManualTransmission {
         return this;
     }
 
-
     @Override
     public ManualTransmission decreaseSpeed() {
         int lowerLimit = lowerGearLimits[gear - 1];
-        if (speed > lowerLimit) {
+        if (gear == 1 && speed <= lowerLimit) {
+            status = "Cannot decrease speed. Reached minimum speed.";
+        } else if (speed > lowerLimit) {
             speed--;
             updateStatusForSpeedChange();
         } else {
